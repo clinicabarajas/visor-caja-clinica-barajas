@@ -5,7 +5,7 @@
 
   const CASH_PROFESSIONALS = [
     { key: "jjb", label: "Barajas" },
-    { key: "fz", label: "Senker" },
+    { key: "fz", label: "Zenker" },
     { key: "ayoslm", label: "Leme" },
     { key: "sanmarcos", label: "San Marco" }
   ];

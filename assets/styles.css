@@ -341,13 +341,18 @@ h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp
 .three-panel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .two-panel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .four-panel-grid, .cash-head-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.cash-main-grid { grid-template-columns: minmax(0, 1.65fr) minmax(340px, 1fr); align-items: start; }
-.cash-billing-grid .data-table th { min-width: 145px; white-space: normal; line-height: 1.35; }
-.cash-billing-grid .data-table th:first-child { min-width: 150px; }
+.cash-main-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+.cash-billing-grid .matrix-table { width: 100%; min-width: 780px; table-layout: fixed; }
+.cash-billing-grid .data-table th { min-width: 0; white-space: normal; line-height: 1.35; }
+.cash-billing-grid .data-table th:first-child { width: 18%; min-width: 0; }
 .cash-billing-grid .data-table th:not(:first-child),
 .cash-billing-grid .data-table td:not(:first-child) { text-align: center; }
 .stacked-panels { min-width: 0; display: grid; gap: 14px; }
 .cash-main-grid > * { min-width: 0; }
+.three-panel-grid > .panel,
+.two-panel-grid > .panel,
+.four-panel-grid > .panel,
+.cash-main-grid > .panel { height: 100%; }
 
 .info-list { display: grid; }
 .info-row { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; min-height: 38px; padding: 9px 0; border-bottom: 1px solid #edf1f0; font-size: 11px; }
@@ -470,10 +475,10 @@ body { font-size: 16px; line-height: 1.5; }
   text-align: center;
 }
 .loading-doctor {
-  width: 220px;
-  height: 148px;
+  width: 176px;
+  height: 220px;
   object-fit: cover;
-  object-position: 50% 30%;
+  object-position: 50% 38%;
   border: 5px solid #e5f4f2;
   border-radius: 18px;
   box-shadow: 0 12px 28px rgba(0, 111, 104, .18);
