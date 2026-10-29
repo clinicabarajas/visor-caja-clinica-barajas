@@ -132,7 +132,7 @@
     const button = document.querySelector("#refreshButton");
     button.disabled = true; authButton.disabled = true; button.textContent = "Consultando…";
     try {
-      await source.load(true);
+      await source.load(false);
       if (state.firstLoad) { const provisional = source.build(getPeriod()); useLatestDate(provisional.latestAvailableKey); state.firstLoad = false; }
       state.data = source.build(getPeriod());
       setConnectedUi(true); render();
