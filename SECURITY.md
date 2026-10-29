@@ -10,6 +10,8 @@ No se deben incorporar:
 - nombres, DNI u otros datos identificativos de pacientes;
 - archivos CSV o Excel exportados con datos reales.
 
-El visor autentica mediante Google y solicita únicamente el alcance `spreadsheets.readonly`. El acceso efectivo lo determinan los permisos de lectura del libro `CAJA`; ocultar pestañas o botones no sustituye esos permisos.
+El visor autentica mediante Google y solicita únicamente el alcance necesario para identificar el correo principal de la cuenta. La lectura de `CAJA` se realiza en un servicio privado que se ejecuta como la cuenta de la clínica y aplica una lista cerrada de usuarios autorizados.
+
+La contable no debe recibir permisos directos sobre `CAJA`. El servicio solo devuelve los rangos necesarios para Resumen, Visor, Gastos y Caja; las columnas con nombre y DNI no se solicitan ni se transmiten.
 
 El identificador público del cliente OAuth puede estar en el repositorio. No debe existir ningún secreto de cliente en una web estática.

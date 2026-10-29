@@ -1,17 +1,7 @@
 (() => {
   "use strict";
 
-  const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
-  const RANGES = [
-    "DASHBOARD_RESUMEN!A1:H41",
-    "DASHBOARD_DIARIO!A1:AN1000",
-    "DASHBOARD_MENSUAL!A1:J250",
-    "BASEP!A1:B5956",
-    "BASEP!D1:E5956",
-    "BASEP!J1:U5956",
-    "BASEGASTOS!A1:H2397",
-    "BASECAJA!A1:BM1460"
-  ];
+  const EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
   const blank = value => value === undefined || value === null || String(value).trim() === "";
 
@@ -88,9 +78,10 @@
       this.tokenClient = null;
       this.consentGranted = false;
       this.raw = null;
+      this.email = "";
     }
 
-    get configured() { return Boolean(this.config.googleClientId && this.config.spreadsheetId); }
+    get configured() { return Boolean(this.config.googleClientId && this.config.backendUrl); }
     get connected() { return Boolean(this.accessToken && Date.now() < this.expiresAt); }
 
     async waitForGoogle() {
@@ -108,9 +99,9 @@
       await new Promise((resolve, reject) => {
         this.tokenClient = window.google.accounts.oauth2.initTokenClient({
           client_id: this.config.googleClientId,
-          scope: SHEETS_SCOPE,
+          scope: EMAIL_SCOPE,
           callback: response => {
-            if (response.error) return reject(new Error("Google no autorizó la consulta del libro CAJA"));
+            if (response.error) return reject(new Error("Google no autorizó el acceso al visor"));
             this.accessToken = response.access_token;
             this.expiresAt = Date.now() + Math.max(60, Number(response.expires_in || 3600) - 60) * 1000;
             this.consentGranted = true;
@@ -118,7 +109,7 @@
           },
           error_callback: () => reject(new Error("Se cerró o bloqueó la ventana de acceso a Google"))
         });
-        this.tokenClient.requestAccessToken({ prompt: forceConsent || !this.consentGranted ? "consent" : "" });
+        this.tokenClient.requestAccessToken({ prompt: forceConsent || !this.consentGranted ? "select_account" : "" });
       });
     }
 
@@ -128,26 +119,64 @@
       this.expiresAt = 0;
       this.consentGranted = false;
       this.raw = null;
+      this.email = "";
     }
 
     async load(force = false) {
       await this.connect(false);
       if (this.raw && !force) return this.raw;
-      const url = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(this.config.spreadsheetId)}/values:batchGet`);
-      RANGES.forEach(range => url.searchParams.append("ranges", range));
-      url.searchParams.set("majorDimension", "ROWS");
-      url.searchParams.set("valueRenderOption", "FORMATTED_VALUE");
-      const response = await fetch(url, { headers: { Authorization: `Bearer ${this.accessToken}` } });
-      if (response.status === 401) {
-        this.accessToken = "";
-        await this.connect(true);
-        return this.load(force);
-      }
-      if (response.status === 403) throw new Error("Esta cuenta no tiene permiso para consultar el libro CAJA");
-      if (!response.ok) throw new Error("No se han podido leer los datos del libro CAJA");
-      const payload = await response.json();
+      const payload = await this.requestPrivateData();
+      this.email = payload.email || "";
       this.raw = this.parse(payload.valueRanges || []);
       return this.raw;
+    }
+
+    requestPrivateData() {
+      return new Promise((resolve, reject) => {
+        const nonceBytes = new Uint8Array(24);
+        window.crypto.getRandomValues(nonceBytes);
+        const nonce = Array.from(nonceBytes, byte => byte.toString(16).padStart(2, "0")).join("");
+        const frameName = `visor-caja-bridge-${nonce}`;
+        const iframe = document.createElement("iframe");
+        iframe.name = frameName;
+        iframe.hidden = true;
+        iframe.setAttribute("aria-hidden", "true");
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = this.config.backendUrl;
+        form.target = frameName;
+        form.hidden = true;
+        const addField = (name, value) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = value;
+          form.appendChild(input);
+        };
+        addField("access_token", this.accessToken);
+        addField("nonce", nonce);
+
+        const cleanup = () => {
+          window.removeEventListener("message", onMessage);
+          window.clearTimeout(timer);
+          form.remove();
+          iframe.remove();
+        };
+        const onMessage = event => {
+          const message = event.data;
+          if (event.source !== iframe.contentWindow || message?.type !== "visor-caja-response" || message.nonce !== nonce) return;
+          cleanup();
+          if (!message.ok) return reject(new Error(message.error || "No se pudo completar la consulta privada"));
+          resolve(message);
+        };
+        const timer = window.setTimeout(() => {
+          cleanup();
+          reject(new Error("El servicio privado tardó demasiado en responder"));
+        }, 45000);
+        window.addEventListener("message", onMessage);
+        document.body.append(iframe, form);
+        form.submit();
+      });
     }
 
     parse(valueRanges) {

@@ -56,7 +56,7 @@
   function emptyRow(columns, text = "No hay registros para el periodo seleccionado") { return `<tr><td class="empty-cell" colspan="${columns}">${escapeHtml(text)}</td></tr>`; }
 
   function renderLocked() {
-    const message = source.configured ? "Accede con una cuenta de Google autorizada para consultar los datos reales del libro CAJA." : "La web está preparada para datos reales. Falta completar una autorización de Google antes de activarla.";
+    const message = source.configured ? "Accede con una cuenta de Google autorizada para usar el visor privado. No necesitas acceso directo al libro CAJA." : "La web está preparada para datos reales. Falta publicar el servicio privado de consulta antes de activarla.";
     root.innerHTML = `<div class="locked-state"><div class="lock-symbol" aria-hidden="true">🔒</div><h2>Visor privado de solo consulta</h2><p>${escapeHtml(message)}</p><button class="button button-primary" type="button" data-connect>Acceder con Google</button><small>No se descarga ni se guarda el libro contable en GitHub.</small></div>`;
     root.querySelector("[data-connect]")?.addEventListener("click", queryData);
   }
@@ -116,7 +116,7 @@
   function setConnectedUi(connected) {
     document.querySelector("#connectionText").textContent = connected ? "Libro CAJA conectado" : "Acceso a Google pendiente";
     document.querySelector("#accountStatus").textContent = connected ? "Acceso autorizado" : "Acceso pendiente";
-    document.querySelector("#accountLabel").textContent = connected ? "Cuenta con permiso de lectura" : "Conecta una cuenta autorizada";
+    document.querySelector("#accountLabel").textContent = connected ? (source.email || "Cuenta autorizada") : "Conecta una cuenta autorizada";
     authButton.textContent = connected ? "Cerrar sesión" : "Acceder con Google";
     document.querySelector("#accessNotice").hidden = connected;
   }

@@ -5,7 +5,8 @@ Interfaz web de solo consulta para revisar el resumen contable, la facturación,
 ## Funcionamiento
 
 - Datos reales leídos en el momento de la consulta desde el libro privado `CAJA`.
-- Acceso con Google y alcance de solo lectura de Google Sheets.
+- Acceso con Google limitado a identificar la cuenta autorizada.
+- Lectura mediante un servicio privado que se ejecuta como la clínica; la contable no recibe acceso al libro `CAJA`.
 - Filtros por día, intervalo y mes.
 - Exportación a CSV y Excel (`.xls`).
 - Número de paciente como único identificador visible.
@@ -20,14 +21,14 @@ El código puede estar en GitHub, pero los datos reales y las credenciales nunca
 
 ## Autorización de Google
 
-La web utiliza Google Identity Services y la API de Google Sheets. Es necesario:
+La web utiliza Google Identity Services y un servicio privado de Google Apps Script. Es necesario:
 
-- habilitar Google Sheets API en el proyecto de Google Cloud de la clínica;
 - crear un cliente OAuth de aplicación web con origen autorizado `https://clinicabarajas.github.io`;
 - copiar únicamente su identificador público en `assets/config.js`;
-- compartir el libro `CAJA` con la contable como lectora.
+- publicar el servicio privado para que se ejecute como la cuenta de la clínica;
+- mantener en las propiedades privadas del servicio la lista de cuentas autorizadas.
 
-No se usa secreto de cliente. El token temporal permanece en la memoria del navegador y desaparece al cerrar la sesión o la pestaña.
+No se usa secreto de cliente en GitHub. El visor solicita únicamente el correo principal de Google; el token temporal permanece en la memoria del navegador y desaparece al cerrar la sesión o la pestaña. La contable no necesita ni recibe permisos sobre el archivo `CAJA`.
 
 ## Fuente contable
 
