@@ -51,7 +51,7 @@
         <span class="status-dot" aria-hidden="true"></span>
         <div>
           <strong>Conexión protegida</strong>
-          <span id="connectionText">Vista de demostración</span>
+          <span id="connectionText">Acceso a Google pendiente</span>
         </div>
       </div>
     </aside>
@@ -65,10 +65,11 @@
         </div>
         <div class="account-area">
           <div class="account-copy">
-            <strong>Acceso autorizado</strong>
-            <span id="accountLabel">Cuenta de demostración</span>
+            <strong id="accountStatus">Acceso pendiente</strong>
+            <span id="accountLabel">Conecta una cuenta autorizada</span>
           </div>
           <div class="avatar" aria-hidden="true">CB</div>
+          <button id="authButton" class="button button-secondary button-auth" type="button">Acceder con Google</button>
         </div>
       </header>
 
@@ -121,9 +122,9 @@
         </div>
       </section>
 
-      <div id="demoNotice" class="notice" role="status">
-        <strong>Vista previa</strong>
-        Los importes son datos de muestra. La publicación final se conectará al libro privado mediante acceso autorizado.
+      <div id="accessNotice" class="notice" role="status">
+        <strong>Datos privados</strong>
+        Inicia sesión con una cuenta que tenga permiso de lectura sobre el libro CAJA. El visor no puede modificar ninguna celda.
       </div>
 
       <section id="viewRoot" class="view-root" aria-live="polite"></section>
@@ -137,8 +138,9 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="assets/config.js"></script>
-  <script src="assets/demo-data.js"></script>
+  <script src="assets/google-sheets-data.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

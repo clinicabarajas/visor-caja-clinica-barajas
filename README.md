@@ -2,34 +2,32 @@
 
 Interfaz web de solo consulta para revisar el resumen contable, la facturación, los gastos y la caja de Clínica Barajas.
 
-## Estado actual
+## Funcionamiento
 
-- Primera versión visual y funcional.
+- Datos reales leídos en el momento de la consulta desde el libro privado `CAJA`.
+- Acceso con Google y alcance de solo lectura de Google Sheets.
 - Filtros por día, intervalo y mes.
 - Exportación a CSV y Excel (`.xls`).
 - Número de paciente como único identificador visible.
-- Datos de demostración: no contiene información real de la clínica.
-- Preparada para publicarse como sitio estático en GitHub Pages.
+- Las columnas con nombre y DNI no se solicitan a Google.
+- Ningún dato contable ni token de acceso se almacena en GitHub.
 
 ## Publicación en GitHub Pages
 
-1. Crear un repositorio privado o público en la cuenta de la clínica.
-2. Subir todo el contenido de esta carpeta a la rama `main`.
-3. En GitHub, abrir **Settings → Pages**.
-4. Seleccionar **GitHub Actions** como origen.
-5. El flujo incluido en `.github/workflows/deploy-pages.yml` publicará la web.
+El flujo incluido en `.github/workflows/deploy-pages.yml` publica la web desde la rama `main`.
 
 El código puede estar en GitHub, pero los datos reales y las credenciales nunca deben guardarse en el repositorio.
 
-## Conexión con los datos privados
+## Autorización de Google
 
-La maqueta utiliza `assets/demo-data.js`. Para la publicación final se configurarán:
+La web utiliza Google Identity Services y la API de Google Sheets. Es necesario:
 
-- acceso con Google;
-- correo de la contable autorizado;
-- una fuente de datos separada con solo las vistas permitidas;
-- credenciales de lectura almacenadas fuera de GitHub;
-- `demoMode: false` y `apiBaseUrl` en `assets/config.js`.
+- habilitar Google Sheets API en el proyecto de Google Cloud de la clínica;
+- crear un cliente OAuth de aplicación web con origen autorizado `https://clinicabarajas.github.io`;
+- copiar únicamente su identificador público en `assets/config.js`;
+- compartir el libro `CAJA` con la contable como lectora.
+
+No se usa secreto de cliente. El token temporal permanece en la memoria del navegador y desaparece al cerrar la sesión o la pestaña.
 
 ## Fuente contable
 
@@ -38,6 +36,6 @@ Libro: `CAJA`
 Pestañas de consulta previstas:
 
 - `DASHBOARD_RESUMEN`, `DASHBOARD_DIARIO` y `DASHBOARD_MENSUAL` para el resumen;
-- `VISITAS` para facturación, sustituyendo nombre y DNI por número de paciente;
-- `GASTOS`, conservando su estructura;
-- `CAJA` para arqueo y saldos.
+- rangos separados de `BASEP` para facturación, excluyendo nombre y DNI desde la consulta;
+- `BASEGASTOS` para gastos;
+- `BASECAJA` para el histórico de arqueos y saldos.

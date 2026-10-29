@@ -10,4 +10,6 @@ No se deben incorporar:
 - nombres, DNI u otros datos identificativos de pacientes;
 - archivos CSV o Excel exportados con datos reales.
 
-La versión final debe autenticar a la contable mediante Google, comprobar una lista de correos autorizados y realizar únicamente consultas de lectura. Ocultar pestañas o botones no sustituye a los permisos de acceso.
+El visor autentica mediante Google y solicita únicamente el alcance `spreadsheets.readonly`. El acceso efectivo lo determinan los permisos de lectura del libro `CAJA`; ocultar pestañas o botones no sustituye esos permisos.
+
+El identificador público del cliente OAuth puede estar en el repositorio. No debe existir ningún secreto de cliente en una web estática.
