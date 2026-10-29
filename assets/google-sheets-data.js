@@ -28,6 +28,10 @@
     return String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   }
 
+  function roundedMoney(value) {
+    return Math.round((number(value) + Number.EPSILON) * 100) / 100;
+  }
+
   function cashProfessionalKey(value) {
     const code = normalizedText(value).replace(/[^A-Z0-9]/g, "");
     if (code === "JJB" || code.includes("JOSEJUANBARAJAS") || code === "BARAJAS") return "jjb";
@@ -303,11 +307,11 @@
         const concept = cashConcept(invoice.seguro);
         const professional = cashProfessionalKey(invoice.profesional);
         if (professional === "unassigned") {
-          unassignedTotal += invoice.total;
-          professionalAmounts[concept].unassigned = number(professionalAmounts[concept].unassigned) + invoice.total;
+          unassignedTotal = roundedMoney(unassignedTotal + invoice.total);
+          professionalAmounts[concept].unassigned = roundedMoney(professionalAmounts[concept].unassigned + invoice.total);
           return;
         }
-        professionalAmounts[concept][professional] += invoice.total;
+        professionalAmounts[concept][professional] = roundedMoney(professionalAmounts[concept][professional] + invoice.total);
       });
       if (unassignedTotal !== 0) professionalColumns.push({ key: "unassigned", label: "Sin profesional asignado" });
 
@@ -322,10 +326,10 @@
           if (column.key === "unassigned") return number(professionalAmounts[concept].unassigned);
           return useInvoiceBreakdown ? number(professionalAmounts[concept][column.key]) : number(legacyBreakdown[concept]?.[column.key]);
         });
-        return { concept, amounts, total: amounts.reduce((total, value) => total + value, 0), emphasis: false };
+        return { concept, amounts, total: roundedMoney(amounts.reduce((total, value) => total + value, 0)), emphasis: false };
       });
-      const professionalTotals = professionalColumns.map((column, index) => professionalRows.reduce((total, row) => total + number(row.amounts[index]), 0));
-      professionalRows.push({ concept: "Total facturado", amounts: professionalTotals, total: professionalTotals.reduce((total, value) => total + value, 0), emphasis: true });
+      const professionalTotals = professionalColumns.map((column, index) => roundedMoney(professionalRows.reduce((total, row) => total + number(row.amounts[index]), 0)));
+      professionalRows.push({ concept: "Total facturado", amounts: professionalTotals, total: roundedMoney(professionalTotals.reduce((total, value) => total + value, 0)), emphasis: true });
       const denominations = [
         ["0,01 €", 29, 30], ["0,02 €", 31, 32], ["0,05 €", 33, 34], ["0,10 €", 35, 36], ["0,20 €", 37, 38], ["0,50 €", 39, 40],
         ["1 €", 41, 42], ["2 €", 43, 44], ["5 €", 47, 48], ["10 €", 49, 50], ["20 €", 51, 52], ["50 €", 53, 54],
