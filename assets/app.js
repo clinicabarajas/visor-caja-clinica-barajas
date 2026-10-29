@@ -91,13 +91,17 @@
   function renderCaja() {
     const c = state.data.cash;
     if (!c.available) { root.innerHTML = `<div class="period-banner"><div><span>${periodKind()}</span><strong>${escapeHtml(state.currentPeriod)}</strong></div></div><div class="locked-state compact"><h2>No hay cierre de caja para este periodo</h2><p>Prueba con otra fecha o elige un intervalo que contenga un cierre.</p></div>`; return; }
-    const professionalRows = c.professionalRows.map(row => `<tr class="${row.emphasis ? "emphasis-row" : ""}"><td><strong>${escapeHtml(row.concept)}</strong></td><td class="numeric">${money(row.jjb)}</td><td class="numeric">${money(row.fz)}</td><td class="numeric"><strong>${money(row.total)}</strong></td></tr>`).join("");
+    const professionalHeaders = c.professionalColumns.map(column => `<th>${escapeHtml(column.label)}</th>`).join("");
+    const professionalRows = c.professionalRows.map(row => `<tr class="${row.emphasis ? "emphasis-row" : ""}"><td><strong>${escapeHtml(row.concept)}</strong></td>${row.amounts.map(value => `<td class="numeric">${money(value)}</td>`).join("")}<td class="numeric"><strong>${money(row.total)}</strong></td></tr>`).join("");
     const denominationRows = c.denominations.map(row => `<tr class="${row.total ? "emphasis-row" : ""}"><td><strong>${escapeHtml(row.value)}</strong></td><td class="numeric">${count(row.count)}</td><td class="numeric">${money(row.amount)}</td></tr>`).join("");
     const reconciliationRows = c.reconciliation.map(row => `<div class="reconciliation-row${row.emphasis ? " is-total" : ""}"><span class="sign ${row.sign === "+" ? "plus" : row.sign === "−" ? "minus" : ""}">${escapeHtml(row.sign)}</span><span>${escapeHtml(row.label)}</span><strong>${money(row.value)}</strong></div>`).join("");
     const closeControls = infoRows([["Total cierre", money(c.totalClose), true], ["Falta / sobra de caja", money(c.difference)], ["Control reparto", money(c.distributionControl)], ["Caja mañana", money(c.tomorrowCash)], ["Pasa a caja fuerte", money(c.safeDeposit)], ["Saldo caja fuerte", money(c.safeBalance)], ["Caja + caja fuerte", money(c.physicalCash), true]]);
     const identification = infoRows([["Identificación de la funda", c.bagId], ["Estado", c.state], ["Depósito a caja fuerte", c.depositMade ? "Sí" : "No"], ["Cierre", c.closeMessage, true]]);
     const banks = infoRows([["La Caixa", money(c.bank1)], ["Bankinter", money(c.bank2)], ["Total bancos", money(c.totalBanks), true]]);
-    root.innerHTML = `<div class="period-banner"><div><span>Cierre diario</span><strong>${escapeHtml(c.date)} · Cajero/a: ${escapeHtml(c.cashier)}</strong></div><span class="status-badge success">${escapeHtml(c.state)}</span></div><div class="cash-head-grid"><div class="cash-head-card"><span>Total facturado</span><strong>${money(c.billed)}</strong></div><div class="cash-head-card"><span>Fondo inicial</span><strong>${money(c.opening)}</strong></div><div class="cash-head-card"><span>Total bancos</span><strong>${money(c.totalBanks)}</strong></div><div class="cash-head-card highlight"><span>Saldo total</span><strong>${money(c.totalBalance)}</strong><small>Bancos + efectivo físico</small></div></div><div class="cash-main-grid">${panel("Facturación del día", "Desglose histórico almacenado en BASECAJA", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Concepto</th><th>JJB</th><th>FZ</th><th>Total</th></tr></thead><tbody>${professionalRows}</tbody></table></div><p class="footnote">Se muestran las columnas históricas existentes en el libro, sin inventar equivalencias entre profesionales.</p>`)}${panel("Arqueo de efectivo", "Monedas y billetes del cierre", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Valor</th><th>Cantidad</th><th>Importe</th></tr></thead><tbody>${denominationRows}</tbody></table></div><p class="footnote">El destino del efectivo se resume en caja de mañana y caja fuerte.</p>`)}</div><div class="cash-main-grid">${panel("Cuadre de caja", "Todos los movimientos disponibles del cierre", `<div class="reconciliation-list">${reconciliationRows}</div>`)}<div class="stacked-panels">${panel("Cierre y destino del efectivo", "Resultado del arqueo", closeControls)}${panel("Identificación del cierre", "Trazabilidad del cierre diario", identification, c.state)}${panel("Saldo bancos", "Saldos informados en el libro", banks)}</div></div>`;
+    const billingPanel = panel("Facturación del día", "Desglose de facturas del día por profesional y aseguradora", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Concepto</th>${professionalHeaders}<th>Total</th></tr></thead><tbody>${professionalRows}</tbody></table></div><p class="footnote">Equivalencias del libro: JJB = José Juan Barajas de Prat, FZ = Franz Zenker, ALR = AYOSLM y FGS = San Marcos.</p>`);
+    const cashCountPanel = panel("Arqueo de efectivo", "Monedas y billetes del cierre", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Valor</th><th>Cantidad</th><th>Importe</th></tr></thead><tbody>${denominationRows}</tbody></table></div><p class="footnote">El destino del efectivo se resume en caja de mañana y caja fuerte.</p>`);
+    const reconciliationPanel = panel("Cuadre de caja", "Todos los movimientos disponibles del cierre", `<div class="reconciliation-list">${reconciliationRows}</div>`);
+    root.innerHTML = `<div class="period-banner"><div><span>Cierre diario</span><strong>${escapeHtml(c.date)} · Cajero/a: ${escapeHtml(c.cashier)}</strong></div><span class="status-badge success">${escapeHtml(c.state)}</span></div><div class="cash-head-grid"><div class="cash-head-card"><span>Total facturado</span><strong>${money(c.billed)}</strong></div><div class="cash-head-card"><span>Fondo inicial</span><strong>${money(c.opening)}</strong></div><div class="cash-head-card"><span>Total bancos</span><strong>${money(c.totalBanks)}</strong></div><div class="cash-head-card highlight"><span>Saldo total</span><strong>${money(c.totalBalance)}</strong><small>Bancos + efectivo físico</small></div></div><div class="cash-billing-grid">${billingPanel}</div><div class="cash-main-grid">${reconciliationPanel}${cashCountPanel}</div><div class="three-panel-grid">${panel("Cierre y destino del efectivo", "Resultado del arqueo", closeControls)}${panel("Identificación del cierre", "Trazabilidad del cierre diario", identification, c.state)}${panel("Saldo bancos", "Saldos informados en el libro", banks)}</div>`;
   }
 
   function render() {
@@ -149,18 +153,52 @@
     if (!state.data) return [];
     if (state.view === "facturacion") return [["P", "Fecha", "N.º factura", "N.º paciente", "Seguros", "Profesional", "Subtotal", "IGIC", "Total", "Cobrado", "Efectivo", "Datáfono", "Transferencia", "FZ", "JJB", "Observaciones"], ...state.data.invoices.map(r => [r.p, r.fecha, r.factura, r.paciente, r.seguro, r.profesional, r.subtotal, r.igic, r.total, r.cobrado, r.efectivo, r.datafono, r.transferencia, r.fz, r.jjb, r.observaciones])];
     if (state.view === "gastos") return [["Fecha", "N.º factura", "Descripción", "Efectivo", "Visa", "Transferencia", "Ingresos", "Observaciones"], ...state.data.expenses.map(r => [r.fecha, r.factura, r.concepto, r.efectivo, r.tarjeta, r.transferencia, r.ingresos, r.observaciones])];
-    if (state.view === "caja") return [["Concepto", "Importe"], ...state.data.cash.reconciliation.map(r => [r.label, r.value]), ["Total cierre", state.data.cash.totalClose], ["Caja fuerte", state.data.cash.safeBalance], ["Total bancos", state.data.cash.totalBanks], ["Saldo total", state.data.cash.totalBalance]];
+    if (state.view === "caja") {
+      const c = state.data.cash;
+      return [
+        ["VISOR CAJA CLÍNICA BARAJAS"],
+        ["CIERRE DIARIO"],
+        ["Fecha", c.date], ["Cajero/a", c.cashier], ["Estado", c.state],
+        [],
+        ["RESUMEN"], ["Indicador", "Importe"],
+        ["Total facturado", c.billed], ["Fondo inicial", c.opening], ["Total bancos", c.totalBanks], ["Saldo total", c.totalBalance],
+        [],
+        ["FACTURACIÓN DEL DÍA"],
+        ["Concepto", ...c.professionalColumns.map(column => column.label), "Total"],
+        ...c.professionalRows.map(row => [row.concept, ...row.amounts, row.total]),
+        [],
+        ["ARQUEO DE EFECTIVO"], ["Valor", "Cantidad", "Importe"],
+        ...c.denominations.map(row => [row.value, row.count, row.amount]),
+        [],
+        ["CUADRE DE CAJA"], ["Signo", "Concepto", "Importe"],
+        ...c.reconciliation.map(row => [row.sign, row.label, row.value]),
+        [],
+        ["CIERRE Y DESTINO DEL EFECTIVO"], ["Concepto", "Importe"],
+        ["Total cierre", c.totalClose], ["Falta / sobra de caja", c.difference], ["Control reparto", c.distributionControl],
+        ["Caja mañana", c.tomorrowCash], ["Pasa a caja fuerte", c.safeDeposit], ["Saldo caja fuerte", c.safeBalance], ["Caja + caja fuerte", c.physicalCash],
+        [],
+        ["IDENTIFICACIÓN DEL CIERRE"], ["Concepto", "Valor"],
+        ["Identificación de la funda", c.bagId], ["Estado", c.state], ["Depósito a caja fuerte", c.depositMade ? "Sí" : "No"], ["Cierre", c.closeMessage],
+        [],
+        ["SALDO BANCOS"], ["Banco", "Importe"],
+        ["La Caixa", c.bank1], ["Bankinter", c.bank2], ["Total bancos", c.totalBanks]
+      ];
+    }
     const s = state.data.summary;
     return [["Indicador", "Valor"], ["Facturación del día", s.activity.day], ["Facturación del mes", s.activity.month], ["Facturación del semestre", s.activity.semester], ["Facturación del año", s.activity.year], ["Caja fuerte", s.treasury.safe], ["Caja operativa", s.treasury.operatingCash], ["Efectivo físico", s.treasury.physicalCash], ["Banco sincronizado", s.treasury.syncedBank], ["Bankinter", s.treasury.bankinter], ["Liquidez total", s.treasury.liquidity], ["Gastos del mes", s.control.monthExpenses]];
   }
 
-  function safeCell(value) { const text = String(value ?? ""); return /^[=+\-@]/.test(text) ? `'${text}` : text; }
+  function safeCell(value) {
+    if (typeof value === "number") return Number.isFinite(value) ? value : "";
+    const text = String(value ?? "");
+    return /^[=+\-@]/.test(text) ? `'${text}` : text;
+  }
   function download(blob, extension) {
     const safePeriod = state.currentPeriod.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
     const url = URL.createObjectURL(blob), link = document.createElement("a");
     link.href = url; link.download = `visor-caja-${state.view}-${safePeriod}.${extension}`; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
   }
-  function exportCsv() { const content = exportRows().map(row => row.map(value => `"${safeCell(value).replace(/"/g, '""')}"`).join(";")).join("\r\n"); download(new Blob(["\ufeff", content], { type: "text/csv;charset=utf-8" }), "csv"); }
+  function exportCsv() { const content = exportRows().map(row => row.map(value => `"${String(safeCell(value)).replace(/"/g, '""')}"`).join(";")).join("\r\n"); download(new Blob(["\ufeff", content], { type: "text/csv;charset=utf-8" }), "csv"); }
   function exportExcel() {
     const rows = exportRows().map(row => `<Row>${row.map(value => { const isNumber = typeof value === "number"; return `<Cell><Data ss:Type="${isNumber ? "Number" : "String"}">${escapeHtml(safeCell(value))}</Data></Cell>`; }).join("")}</Row>`).join("");
     const xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="${state.view}"><Table>${rows}</Table></Worksheet></Workbook>`;

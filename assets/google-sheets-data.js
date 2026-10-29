@@ -3,6 +3,15 @@
 
   const EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
+  const CASH_PROFESSIONALS = [
+    { key: "jjb", label: "JJB · José Juan Barajas de Prat" },
+    { key: "fz", label: "FZ · Franz Zenker" },
+    { key: "ayoslm", label: "AYOSLM" },
+    { key: "sanmarcos", label: "San Marcos" }
+  ];
+
+  const CASH_CONCEPTS = ["Privados", "ADESLAS", "CASER", "DKV", "HNA", "Santa Lucía / FDB", "OTROS"];
+
   const blank = value => value === undefined || value === null || String(value).trim() === "";
 
   function number(value) {
@@ -13,6 +22,30 @@
     const normalized = cleaned.includes(",") ? cleaned.replace(/\./g, "").replace(",", ".") : cleaned;
     const parsed = Number.parseFloat(normalized.replace(/[^0-9+\-.]/g, ""));
     return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function normalizedText(value) {
+    return String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  }
+
+  function cashProfessionalKey(value) {
+    const code = normalizedText(value).replace(/[^A-Z0-9]/g, "");
+    if (code === "JJB" || code.includes("JOSEJUANBARAJAS") || code === "BARAJAS") return "jjb";
+    if (code === "FZ" || code.includes("FRANZZENKER") || code.includes("AUDIOPROTESIS")) return "fz";
+    if (code === "ALR" || code === "AYOSLM" || code.includes("LEMES")) return "ayoslm";
+    if (code === "FGS" || code.includes("SAMMARCO") || code.includes("SANMARCO")) return "sanmarcos";
+    return "unassigned";
+  }
+
+  function cashConcept(value) {
+    const insurance = normalizedText(value);
+    if (insurance.includes("PRIV")) return "Privados";
+    if (insurance.includes("ADESLAS")) return "ADESLAS";
+    if (insurance.includes("CASER")) return "CASER";
+    if (insurance.includes("DKV")) return "DKV";
+    if (insurance.includes("HNA")) return "HNA";
+    if (insurance.includes("SANTA") || insurance.includes("FDB") || insurance.includes("FUNDACION")) return "Santa Lucía / FDB";
+    return "OTROS";
   }
 
   function dateKey(value) {
@@ -253,21 +286,46 @@
       };
       return {
         summary, billingTotals, invoices: periodInvoices, expenseTotals, expenses: periodExpenses,
-        cash: this.buildCash(selectedDaily), selectedKey: selectedDaily?.key || "", latestAvailableKey: latest(this.raw.daily)?.key || ""
+        cash: this.buildCash(selectedDaily, this.raw.invoices.filter(row => row.key === selectedDaily?.key)), selectedKey: selectedDaily?.key || "", latestAvailableKey: latest(this.raw.daily)?.key || ""
       };
     }
 
-    buildCash(selectedDaily) {
+    buildCash(selectedDaily, dailyInvoices = []) {
       const key = selectedDaily?.key || "";
       const sameDate = this.raw.cashRows.filter(row => row.key === key);
       const detail = [...sameDate].sort((a, b) => b.values.slice(4, 14).filter(value => !blank(value)).length - a.values.slice(4, 14).filter(value => !blank(value)).length)[0]?.values || [];
       const close = [...sameDate].sort((a, b) => Number(!blank(b.values[28])) - Number(!blank(a.values[28])) || b.values.slice(29, 63).filter(value => !blank(value)).length - a.values.slice(29, 63).filter(value => !blank(value)).length)[0]?.values || detail;
       const daily = selectedDaily?.values || [];
-      const jjbTotal = number(detail[11]), fzTotal = number(detail[13]);
-      const professionalRows = [
-        ["Privados", detail[4], detail[12]], ["ADESLAS", detail[5], 0], ["CASER", detail[6], 0], ["DKV", detail[7], 0],
-        ["HNA", detail[8], 0], ["Santa Lucía / FDB", detail[9], 0], ["OTROS", detail[10], 0], ["Total facturado", jjbTotal, fzTotal, true]
-      ].map(([concept, jjb, fz, emphasis]) => ({ concept, jjb: number(jjb), fz: number(fz), total: number(jjb) + number(fz), emphasis: Boolean(emphasis) }));
+      const professionalColumns = CASH_PROFESSIONALS.map(column => ({ ...column }));
+      const professionalAmounts = Object.fromEntries(CASH_CONCEPTS.map(concept => [concept, Object.fromEntries(CASH_PROFESSIONALS.map(column => [column.key, 0]))]));
+      let unassignedTotal = 0;
+      dailyInvoices.forEach(invoice => {
+        const concept = cashConcept(invoice.seguro);
+        const professional = cashProfessionalKey(invoice.profesional);
+        if (professional === "unassigned") {
+          unassignedTotal += invoice.total;
+          professionalAmounts[concept].unassigned = number(professionalAmounts[concept].unassigned) + invoice.total;
+          return;
+        }
+        professionalAmounts[concept][professional] += invoice.total;
+      });
+      if (unassignedTotal !== 0) professionalColumns.push({ key: "unassigned", label: "Sin profesional asignado" });
+
+      const useInvoiceBreakdown = dailyInvoices.length > 0;
+      const legacyBreakdown = {
+        "Privados": { jjb: number(detail[4]), fz: number(detail[12]) }, "ADESLAS": { jjb: number(detail[5]), fz: 0 },
+        "CASER": { jjb: number(detail[6]), fz: 0 }, "DKV": { jjb: number(detail[7]), fz: 0 }, "HNA": { jjb: number(detail[8]), fz: 0 },
+        "Santa Lucía / FDB": { jjb: number(detail[9]), fz: 0 }, "OTROS": { jjb: number(detail[10]), fz: 0 }
+      };
+      const professionalRows = CASH_CONCEPTS.map(concept => {
+        const amounts = professionalColumns.map(column => {
+          if (column.key === "unassigned") return number(professionalAmounts[concept].unassigned);
+          return useInvoiceBreakdown ? number(professionalAmounts[concept][column.key]) : number(legacyBreakdown[concept]?.[column.key]);
+        });
+        return { concept, amounts, total: amounts.reduce((total, value) => total + value, 0), emphasis: false };
+      });
+      const professionalTotals = professionalColumns.map((column, index) => professionalRows.reduce((total, row) => total + number(row.amounts[index]), 0));
+      professionalRows.push({ concept: "Total facturado", amounts: professionalTotals, total: professionalTotals.reduce((total, value) => total + value, 0), emphasis: true });
       const denominations = [
         ["0,01 €", 29, 30], ["0,02 €", 31, 32], ["0,05 €", 33, 34], ["0,10 €", 35, 36], ["0,20 €", 37, 38], ["0,50 €", 39, 40],
         ["1 €", 41, 42], ["2 €", 43, 44], ["5 €", 47, 48], ["10 €", 49, 50], ["20 €", 51, 52], ["50 €", 53, 54],
@@ -286,7 +344,7 @@
       const difference = number(daily[18]);
       return {
         available: Boolean(key && sameDate.length), date: displayDate(key), cashier: close[1] || detail[1] || "—", state: Math.abs(difference) < 0.005 ? "CAJA CUADRADA" : "REVISAR CUADRE",
-        billed: number(daily[5]) || number(detail[2]), opening: number(close[3]), professionalRows, denominations, reconciliation,
+        billed: number(daily[5]) || number(detail[2]), opening: number(close[3]), professionalColumns, professionalRows, denominations, reconciliation,
         totalClose: number(close[28]), difference, distributionControl: difference, tomorrowCash: number(daily[15]), safeDeposit: number(close[64]),
         safeBalance: number(daily[16]), physicalCash: number(daily[14]), bagId: key.replaceAll("-", ""),
         depositMade: String(close[63] || "").trim().toUpperCase() === "SI" || String(close[63] || "").trim().toUpperCase() === "SÍ",

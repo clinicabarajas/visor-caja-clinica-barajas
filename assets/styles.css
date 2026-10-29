@@ -337,11 +337,13 @@ h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp
 .status-badge { display: inline-flex !important; width: fit-content; padding: 7px 10px; color: var(--brand-teal-dark) !important; border-radius: 999px; background: var(--brand-teal-soft); white-space: nowrap; }
 .status-badge.success { color: #4c6027 !important; background: #e9f0dc; }
 
-.three-panel-grid, .two-panel-grid, .four-panel-grid, .cash-head-grid, .cash-main-grid { display: grid; gap: 14px; margin-bottom: 14px; }
+.three-panel-grid, .two-panel-grid, .four-panel-grid, .cash-head-grid, .cash-billing-grid, .cash-main-grid { display: grid; gap: 14px; margin-bottom: 14px; }
 .three-panel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .two-panel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .four-panel-grid, .cash-head-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .cash-main-grid { grid-template-columns: minmax(0, 1.65fr) minmax(340px, 1fr); align-items: start; }
+.cash-billing-grid .data-table th { min-width: 145px; white-space: normal; line-height: 1.35; }
+.cash-billing-grid .data-table th:first-child { min-width: 150px; }
 .stacked-panels { min-width: 0; display: grid; gap: 14px; }
 .cash-main-grid > * { min-width: 0; }
 
