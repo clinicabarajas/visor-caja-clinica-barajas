@@ -344,6 +344,8 @@ h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp
 .cash-main-grid { grid-template-columns: minmax(0, 1.65fr) minmax(340px, 1fr); align-items: start; }
 .cash-billing-grid .data-table th { min-width: 145px; white-space: normal; line-height: 1.35; }
 .cash-billing-grid .data-table th:first-child { min-width: 150px; }
+.cash-billing-grid .data-table th:not(:first-child),
+.cash-billing-grid .data-table td:not(:first-child) { text-align: center; }
 .stacked-panels { min-width: 0; display: grid; gap: 14px; }
 .cash-main-grid > * { min-width: 0; }
 
@@ -445,6 +447,51 @@ body { font-size: 16px; line-height: 1.5; }
 .reconciliation-row { min-height: 43px; font-size: 14px; }
 .reconciliation-row.is-total { font-size: 15px; }
 .page-footer { font-size: 14px; }
+
+.is-loading { overflow: hidden; }
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 35, 34, .72);
+  backdrop-filter: blur(5px);
+}
+.loading-overlay[hidden] { display: none; }
+.loading-dialog {
+  width: min(480px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(4, 22, 21, .35);
+  text-align: center;
+}
+.loading-doctor {
+  width: 220px;
+  height: 148px;
+  object-fit: cover;
+  object-position: 50% 30%;
+  border: 5px solid #e5f4f2;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(0, 111, 104, .18);
+}
+.loading-spinner {
+  width: 42px;
+  height: 42px;
+  margin: -18px auto 12px;
+  border: 5px solid #d9ece9;
+  border-top-color: var(--brand-teal);
+  border-radius: 50%;
+  background: #fff;
+  animation: loading-spin .9s linear infinite;
+}
+.loading-dialog h2 { margin: 0; color: var(--ink); font-size: 26px; }
+.loading-dialog p { margin: 10px 0 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .loading-spinner { animation-duration: 1.8s; } }
 .toast { font-size: 15px; line-height: 1.45; }
 
 @media (max-width: 1050px) {

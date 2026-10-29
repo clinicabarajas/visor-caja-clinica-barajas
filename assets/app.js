@@ -17,6 +17,7 @@
   const root = document.querySelector("#viewRoot");
   const toast = document.querySelector("#toast");
   const authButton = document.querySelector("#authButton");
+  const loadingOverlay = document.querySelector("#loadingOverlay");
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
@@ -98,7 +99,7 @@
     const closeControls = infoRows([["Total cierre", money(c.totalClose), true], ["Falta / sobra de caja", money(c.difference)], ["Control reparto", money(c.distributionControl)], ["Caja mañana", money(c.tomorrowCash)], ["Pasa a caja fuerte", money(c.safeDeposit)], ["Saldo caja fuerte", money(c.safeBalance)], ["Caja + caja fuerte", money(c.physicalCash), true]]);
     const identification = infoRows([["Identificación de la funda", c.bagId], ["Estado", c.state], ["Depósito a caja fuerte", c.depositMade ? "Sí" : "No"], ["Cierre", c.closeMessage, true]]);
     const banks = infoRows([["La Caixa", money(c.bank1)], ["Bankinter", money(c.bank2)], ["Total bancos", money(c.totalBanks), true]]);
-    const billingPanel = panel("Facturación del día", "Desglose de facturas del día por profesional y aseguradora", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Concepto</th>${professionalHeaders}<th>Total</th></tr></thead><tbody>${professionalRows}</tbody></table></div><p class="footnote">Equivalencias del libro: JJB = José Juan Barajas de Prat, FZ = Franz Zenker, ALR = AYOSLM y FGS = San Marcos.</p>`);
+    const billingPanel = panel("Facturación del día", "Desglose de facturas del día por profesional y aseguradora", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Concepto</th>${professionalHeaders}<th>Total</th></tr></thead><tbody>${professionalRows}</tbody></table></div><p class="footnote">Los importes se agrupan por profesional y tipo de aseguradora según los registros del día.</p>`);
     const cashCountPanel = panel("Arqueo de efectivo", "Monedas y billetes del cierre", `<div class="table-scroll"><table class="data-table matrix-table"><thead><tr><th>Valor</th><th>Cantidad</th><th>Importe</th></tr></thead><tbody>${denominationRows}</tbody></table></div><p class="footnote">El destino del efectivo se resume en caja de mañana y caja fuerte.</p>`);
     const reconciliationPanel = panel("Cuadre de caja", "Todos los movimientos disponibles del cierre", `<div class="reconciliation-list">${reconciliationRows}</div>`);
     root.innerHTML = `<div class="period-banner"><div><span>Cierre diario</span><strong>${escapeHtml(c.date)} · Cajero/a: ${escapeHtml(c.cashier)}</strong></div><span class="status-badge success">${escapeHtml(c.state)}</span></div><div class="cash-head-grid"><div class="cash-head-card"><span>Total facturado</span><strong>${money(c.billed)}</strong></div><div class="cash-head-card"><span>Fondo inicial</span><strong>${money(c.opening)}</strong></div><div class="cash-head-card"><span>Total bancos</span><strong>${money(c.totalBanks)}</strong></div><div class="cash-head-card highlight"><span>Saldo total</span><strong>${money(c.totalBalance)}</strong><small>Bancos + efectivo físico</small></div></div><div class="cash-billing-grid">${billingPanel}</div><div class="cash-main-grid">${reconciliationPanel}${cashCountPanel}</div><div class="three-panel-grid">${panel("Cierre y destino del efectivo", "Resultado del arqueo", closeControls)}${panel("Identificación del cierre", "Trazabilidad del cierre diario", identification, c.state)}${panel("Saldo bancos", "Saldos informados en el libro", banks)}</div>`;
@@ -117,6 +118,11 @@
   }
 
   function showToast(message) { toast.textContent = message; toast.classList.add("is-visible"); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 3200); }
+  function setLoading(active) {
+    loadingOverlay.hidden = !active;
+    document.body.classList.toggle("is-loading", active);
+    document.querySelector("#contenido").setAttribute("aria-busy", String(active));
+  }
   function setConnectedUi(connected) {
     document.querySelector("#connectionText").textContent = connected ? "Libro CAJA conectado" : "Acceso a Google pendiente";
     document.querySelector("#accountStatus").textContent = connected ? "Acceso autorizado" : "Acceso pendiente";
@@ -134,8 +140,12 @@
 
   async function queryData() {
     const button = document.querySelector("#refreshButton");
+    let loadingStarted = 0;
     button.disabled = true; authButton.disabled = true; button.textContent = "Consultando…";
     try {
+      await source.connect(false);
+      loadingStarted = Date.now();
+      setLoading(true);
       await source.load(false);
       if (state.firstLoad) { const provisional = source.build(getPeriod()); useLatestDate(provisional.latestAvailableKey); state.firstLoad = false; }
       state.data = source.build(getPeriod());
@@ -145,6 +155,11 @@
     } catch (error) {
       setConnectedUi(source.connected); showToast(error.message || "No se pudo actualizar la consulta"); if (!state.data) renderLocked();
     } finally {
+      if (loadingStarted) {
+        const remaining = Math.max(0, 900 - (Date.now() - loadingStarted));
+        if (remaining) await new Promise(resolve => window.setTimeout(resolve, remaining));
+      }
+      setLoading(false);
       button.disabled = false; authButton.disabled = false; button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M6.1 9A7 7 0 0 1 18.5 6.5L20 11M4 13l1.5 4.5A7 7 0 0 0 17.9 15"/></svg>Consultar`;
     }
   }

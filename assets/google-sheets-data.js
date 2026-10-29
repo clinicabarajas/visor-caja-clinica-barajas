@@ -4,10 +4,10 @@
   const EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
   const CASH_PROFESSIONALS = [
-    { key: "jjb", label: "JJB · José Juan Barajas de Prat" },
-    { key: "fz", label: "FZ · Franz Zenker" },
-    { key: "ayoslm", label: "AYOSLM" },
-    { key: "sanmarcos", label: "San Marcos" }
+    { key: "jjb", label: "Barajas" },
+    { key: "fz", label: "Senker" },
+    { key: "ayoslm", label: "Leme" },
+    { key: "sanmarcos", label: "San Marco" }
   ];
 
   const CASH_CONCEPTS = ["Privados", "ADESLAS", "CASER", "DKV", "HNA", "Santa Lucía / FDB", "OTROS"];
