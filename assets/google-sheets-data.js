@@ -164,7 +164,7 @@
         };
         const onMessage = event => {
           const message = event.data;
-          if (event.source !== iframe.contentWindow || message?.type !== "visor-caja-response" || message.nonce !== nonce) return;
+          if (message?.type !== "visor-caja-response" || message.nonce !== nonce) return;
           cleanup();
           if (!message.ok) return reject(new Error(message.error || "No se pudo completar la consulta privada"));
           resolve(message);
