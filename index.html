@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#007f7e">
+  <meta name="description" content="Visor contable de solo consulta de Clínica Barajas">
+  <title>Visor Caja · Clínica Barajas</title>
+  <link rel="icon" href="assets/logo-clinica-barajas.png">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div class="brand">
+        <img src="assets/logo-clinica-barajas.png" alt="Clínica Barajas">
+        <div class="brand-copy">
+          <strong>Visor Caja</strong>
+          <span>Clínica Barajas</span>
+        </div>
+      </div>
+
+      <div class="access-chip" title="Este visor no permite modificar el libro contable">
+        <span class="lock-dot" aria-hidden="true"></span>
+        Solo consulta
+      </div>
+
+      <nav class="main-nav">
+        <button class="nav-item is-active" type="button" data-view="resumen" aria-current="page">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
+          <span>Resumen</span>
+        </button>
+        <button class="nav-item" type="button" data-view="facturacion">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 2v4h4M9 12h8M9 16h8"/></svg>
+          <span>Visor</span>
+        </button>
+        <button class="nav-item" type="button" data-view="gastos">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16v12H4V7Zm3-3h10v3H7V4Zm0 8h5m4 0h1"/></svg>
+          <span>Gastos</span>
+        </button>
+        <button class="nav-item" type="button" data-view="caja">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h18v13H3V6Zm3-3h12v3H6V3Zm9 9h3"/></svg>
+          <span>Caja</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong>Conexión protegida</strong>
+          <span id="connectionText">Vista de demostración</span>
+        </div>
+      </div>
+    </aside>
+
+    <main id="contenido" class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">VISOR CAJA CLÍNICA BARAJAS</p>
+          <h1 id="pageTitle">Resumen financiero</h1>
+          <p id="pageSubtitle" class="page-subtitle">Información consolidada del periodo seleccionado</p>
+        </div>
+        <div class="account-area">
+          <div class="account-copy">
+            <strong>Acceso autorizado</strong>
+            <span id="accountLabel">Cuenta de demostración</span>
+          </div>
+          <div class="avatar" aria-hidden="true">CB</div>
+        </div>
+      </header>
+
+      <section class="filter-panel" aria-labelledby="filterTitle">
+        <div class="filter-heading">
+          <div>
+            <span class="filter-kicker">Periodo de consulta</span>
+            <strong id="filterTitle">Selecciona las fechas</strong>
+          </div>
+          <div class="mode-switch" role="group" aria-label="Tipo de periodo">
+            <button class="mode-button is-active" type="button" data-mode="day">Día</button>
+            <button class="mode-button" type="button" data-mode="range">Intervalo</button>
+            <button class="mode-button" type="button" data-mode="month">Mes</button>
+          </div>
+        </div>
+
+        <div class="filter-controls">
+          <div class="date-fields">
+            <label class="date-field" data-date-field="day">
+              <span>Fecha</span>
+              <input id="dayInput" type="date" value="2026-10-28">
+            </label>
+            <label class="date-field is-hidden" data-date-field="range-start">
+              <span>Desde</span>
+              <input id="rangeStartInput" type="date" value="2026-10-01">
+            </label>
+            <label class="date-field is-hidden" data-date-field="range-end">
+              <span>Hasta</span>
+              <input id="rangeEndInput" type="date" value="2026-10-28">
+            </label>
+            <label class="date-field is-hidden" data-date-field="month">
+              <span>Mes</span>
+              <input id="monthInput" type="month" value="2026-10">
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button id="refreshButton" class="button button-primary" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M6.1 9A7 7 0 0 1 18.5 6.5L20 11M4 13l1.5 4.5A7 7 0 0 0 17.9 15"/></svg>
+              Consultar
+            </button>
+            <button id="exportMenuButton" class="button button-secondary" type="button" aria-expanded="false" aria-controls="exportMenu">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 20h14"/></svg>
+              Exportar
+            </button>
+            <div id="exportMenu" class="export-menu" hidden>
+              <button type="button" data-export="csv">Descargar CSV</button>
+              <button type="button" data-export="xls">Abrir en Excel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div id="demoNotice" class="notice" role="status">
+        <strong>Vista previa</strong>
+        Los importes son datos de muestra. La publicación final se conectará al libro privado mediante acceso autorizado.
+      </div>
+
+      <section id="viewRoot" class="view-root" aria-live="polite"></section>
+
+      <footer class="page-footer">
+        <span>Clínica Barajas · Visor contable de solo consulta</span>
+        <span id="lastUpdate">Última consulta: —</span>
+      </footer>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/demo-data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
