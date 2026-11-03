@@ -220,18 +220,20 @@
       const daily = readRange(valueRanges, "DASHBOARD_DIARIO").slice(1).map(values => ({ key: dateKey(values[0]), values })).filter(row => row.key);
       const monthly = readRange(valueRanges, "DASHBOARD_MENSUAL").slice(1).map(values => ({ key: String(values[2] || ""), values })).filter(row => row.key);
       const summary = dashboardCurrent(readRange(valueRanges, "DASHBOARD_RESUMEN"));
-      const pAB = readRange(valueRanges, "BASEP").slice(1);
       const allBasePRanges = valueRanges.filter(item => String(item.range || "").startsWith("BASEP!"));
-      const pDE = allBasePRanges[1]?.values?.slice(1) || [];
-      const pJU = allBasePRanges[2]?.values?.slice(1) || [];
-      const invoiceCount = Math.max(pAB.length, pDE.length, pJU.length);
+      const basePRange = column => allBasePRanges.find(item => new RegExp(`^BASEP!${column}\\d+:`).test(String(item.range || "")))?.values?.slice(1) || [];
+      const pAB = basePRange("A");
+      const pDE = basePRange("D");
+      const pF = basePRange("F");
+      const pJU = basePRange("J");
+      const invoiceCount = Math.max(pAB.length, pDE.length, pF.length, pJU.length);
       const invoices = [];
       for (let index = 0; index < invoiceCount; index += 1) {
-        const ab = pAB[index] || [], de = pDE[index] || [], ju = pJU[index] || [];
+        const ab = pAB[index] || [], de = pDE[index] || [], f = pF[index] || [], ju = pJU[index] || [];
         const key = dateKey(ab[1]);
         if (!key || (!de[0] && !de[1] && !ju.some(value => !blank(value)))) continue;
         invoices.push({
-          key, p: ab[0] || "", fecha: ab[1] || displayDate(key), factura: de[0] || "", paciente: de[1] || "",
+          key, p: ab[0] || "", fecha: ab[1] || displayDate(key), nombreApellidos: f[0] || "", factura: de[0] || "", paciente: de[1] || "",
           seguro: ju[0] || "", profesional: ju[1] || "", subtotal: number(ju[2]), igic: number(ju[3]), total: number(ju[4]),
           cobrado: number(ju[5]), efectivo: number(ju[6]), datafono: number(ju[7]), transferencia: number(ju[8]),
           fz: number(ju[9]), jjb: number(ju[10]), observaciones: ju[11] || ""

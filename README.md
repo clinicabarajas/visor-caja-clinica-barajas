@@ -9,8 +9,8 @@ Interfaz web de solo consulta para revisar el resumen contable, la facturación,
 - Lectura mediante un servicio privado que se ejecuta como la clínica; la contable no recibe acceso al libro `CAJA`.
 - Filtros por día, intervalo y mes.
 - Exportación a CSV y Excel (`.xls`).
-- Número de paciente como único identificador visible.
-- Las columnas con nombre y DNI no se solicitan a Google.
+- Número de paciente y nombre completo visibles en columnas separadas.
+- La columna con DNI no se solicita a Google.
 - Ningún dato contable ni token de acceso se almacena en GitHub.
 
 ## Publicación en GitHub Pages
@@ -37,6 +37,6 @@ Libro: `CAJA`
 Pestañas de consulta previstas:
 
 - `DASHBOARD_RESUMEN`, `DASHBOARD_DIARIO` y `DASHBOARD_MENSUAL` para el resumen;
-- rangos separados de `BASEP` para facturación, excluyendo nombre y DNI desde la consulta;
+- rangos separados de `BASEP` para facturación, incluyendo `PACIENTE` (columna F) y excluyendo el DNI (columna I) desde la consulta;
 - `BASEGASTOS` para gastos;
 - `BASECAJA` para el histórico de arqueos y saldos.
